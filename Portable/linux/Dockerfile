@@ -3,7 +3,7 @@
 FROM --platform=linux/amd64 ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl ca-certificates build-essential pkg-config file rpm patchelf xdg-utils \
+      curl ca-certificates build-essential pkg-config file rpm patchelf xdg-utils squashfs-tools \
       libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev libssl-dev \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
