@@ -19,3 +19,6 @@ Portable/moteur/.build/
 .DS_Store
 .claude/
 *.log
+Portable/sortie/
+Portable/linux/sortie/
+Portable/linux/construire.log
