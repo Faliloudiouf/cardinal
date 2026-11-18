@@ -30,6 +30,15 @@ enum LooImporter {
         var end: Int
     }
 
+    /// Multiplicité UML : « * », « 1 », « 0..1 », « 1..* », « 2..5 »…
+    static func isMultiplicity(_ text: String) -> Bool {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return false }
+        let parts = t.components(separatedBy: "..")
+        guard parts.count <= 2 else { return false }
+        return parts.allSatisfy { $0 == "*" || (!$0.isEmpty && $0.allSatisfy(\.isNumber)) }
+    }
+
     static func model(from data: Data) throws -> MCDModel {
         try Reader(bytes: [UInt8](data)).run()
     }
@@ -115,6 +124,9 @@ enum LooImporter {
         /// Enregistrement d'une propriété : code, (type, 1, 0), 3 chaînes, entier, libellé, 2 chaînes, 14 entiers.
         func attributes(in range: Range<Int>) -> [Attribute] {
             var result: [Attribute] = []
+            /// Nombre d'identifiants, lu juste avant la première propriété : (65536, nombre de propriétés,
+            /// nombre d'identifiants). Les identifiants sont les premières propriétés de la liste.
+            var identifierCount: Int?
             var offset = range.lowerBound
             while offset < range.upperBound - 3 {
                 guard let (code, afterCode) = string(at: offset) else {
@@ -154,11 +166,20 @@ enum LooImporter {
                 case 3: .booleen
                 default: .varchar
                 }
+                if result.isEmpty, i32(offset - 12) == 65536, let total = i32(offset - 8), let ids = i32(offset - 4),
+                   total > 0, ids >= 0, ids <= total {
+                    identifierCount = Int(ids)
+                }
                 result.append(Attribute(
-                    name: code, type: type, length: length, precision: 15, scale: 2, isIdentifier: identifierFlag == 1,
+                    name: code.trimmingCharacters(in: .whitespaces), type: type, length: length, precision: 15, scale: 2, isIdentifier: identifierFlag == 1,
                     label: label == code ? "" : label
                 ))
                 offset = cursor + 56
+            }
+            // Le compte d'identifiants fait foi ; l'indicateur propre à chaque propriété ne sert qu'à défaut
+            // (dans certains fichiers, il est aussi à 1 pour des propriétés qui ne sont pas des identifiants).
+            if let identifierCount {
+                for index in result.indices { result[index].isIdentifier = index < identifierCount }
             }
             return result
         }
@@ -186,7 +207,7 @@ enum LooImporter {
                     if !found.isEmpty {
                         attributes = found
                     } else if name.isEmpty, let text = strings(in: range).first {
-                        name = text
+                        name = text.trimmingCharacters(in: .whitespacesAndNewlines)
                     }
                     next += 1
                 }
@@ -211,34 +232,46 @@ enum LooImporter {
                 }
             }
 
-            // Pattes : enregistrements (texte, texte+1, texte+2, segmentA, segmentB, nœud, 1) par paires.
-            var records: [(text: Int32, node: Int32, entitySide: Bool)] = []
-            let tableStart = objects.last?.marker ?? 0
-            var offset = tableStart
-            while offset + 28 <= bytes.count {
-                if let t = i32(offset), t > 0, i32(offset + 4) == t + 1, i32(offset + 8) == t + 2,
-                   let a = i32(offset + 12), let b = i32(offset + 16), let node = i32(offset + 20), i32(offset + 24) == 1,
-                   (a == 0) != (b == 0), byID[node] != nil {
-                    records.append((t, node, a == 0))
-                    offset += 28
-                } else {
-                    offset += 1
+            // Pattes. Chaque liaison laisse deux enregistrements voisins dans le fichier :
+            // (trois numéros de textes consécutifs, dans un ordre quelconque, segment de départ ou 0,
+            // segment d'arrivée ou 0, nœud relié, 1). L'un rattache la liaison à l'entité, l'autre à
+            // l'association. Le texte du milieu de l'enregistrement « d'arrivée » (segment de départ
+            // à 0) porte la cardinalité et le rôle.
+            struct Record { let offset: Int; let texts: [Int32]; let node: Int32; let arrival: Bool }
+            let arcs = Set(objects.filter { $0.kind == .arc }.map(\.id))
+            var records: [Record] = []
+            var offset = 12
+            while offset + 16 <= bytes.count {
+                if i32(offset + 12) == 1, let a = i32(offset), let b = i32(offset + 4), let node = i32(offset + 8),
+                   (arcs.contains(a) && b == 0) || (a == 0 && arcs.contains(b)),
+                   entityIDs[node] != nil || associationIDs[node] != nil,
+                   let t1 = i32(offset - 12), let t2 = i32(offset - 8), let t3 = i32(offset - 4) {
+                    let texts = [t1, t2, t3].sorted()
+                    if texts[0] > 0, texts[1] == texts[0] + 1, texts[2] == texts[0] + 2 {
+                        records.append(Record(offset: offset, texts: texts, node: node, arrival: a == 0))
+                        offset += 16
+                        continue
+                    }
                 }
+                offset += 1
             }
             var index = 0
             while index + 1 < records.count {
-                let first = records[index]
-                let second = records[index + 1]
-                guard first.entitySide, !second.entitySide else { index += 1; continue }
-                index += 2
-                let nodes = [first.node, second.node]
-                guard let entityRaw = nodes.first(where: { entityIDs[$0] != nil }),
-                      let associationRaw = nodes.first(where: { associationIDs[$0] != nil }),
+                let pair = [records[index], records[index + 1]]
+                // Deux enregistrements d'une même liaison : voisins, l'un vers une entité, l'autre vers une association.
+                guard pair[1].offset - pair[0].offset < 160,
+                      let entityRaw = pair.map(\.node).first(where: { entityIDs[$0] != nil }),
+                      let associationRaw = pair.map(\.node).first(where: { associationIDs[$0] != nil }),
                       let entityID = entityIDs[entityRaw], let associationID = associationIDs[associationRaw],
-                      let associationIndex = model.associations.firstIndex(where: { $0.id == associationID }) else { continue }
+                      let associationIndex = model.associations.firstIndex(where: { $0.id == associationID }) else {
+                    index += 1
+                    continue
+                }
+                index += 2
 
                 var leg = Leg(entityID: entityID)
-                if let cardinalityText = byID[first.text + 1] {
+                let labelRecord = pair.first(where: \.arrival) ?? pair[0]
+                if let cardinalityText = byID[labelRecord.texts[1]] {
                     let range = cardinalityText.marker..<cardinalityText.end
                     if let code = find([15, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0], in: range), let value = i32(code + 12) {
                         leg.cardinality = switch value {
@@ -248,8 +281,10 @@ enum LooImporter {
                         default: .zeroMany
                         }
                     }
+                    // Le second texte est le rôle… sauf quand Looping y range la multiplicité UML
+                    // de la patte (« * », « 1 », « 0..1 », « 1..* ») : ce n'est pas un rôle.
                     let texts = strings(in: range)
-                    if texts.count >= 2 { leg.role = texts[1] }
+                    if texts.count >= 2, !LooImporter.isMultiplicity(texts[1]) { leg.role = texts[1].trimmingCharacters(in: .whitespaces) }
                 }
                 model.associations[associationIndex].legs.append(leg)
             }

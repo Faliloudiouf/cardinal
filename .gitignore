@@ -24,3 +24,4 @@ Portable/linux/sortie/
 Portable/linux/construire.log
 Scripts/dmg/fond*.png
 Scripts/dmg/fond.tiff
+Core/Tests/CardinalCoreTests/Fixtures/exo2.loo
