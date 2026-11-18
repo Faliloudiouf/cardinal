@@ -22,3 +22,5 @@ Portable/moteur/.build/
 Portable/sortie/
 Portable/linux/sortie/
 Portable/linux/construire.log
+Scripts/dmg/fond*.png
+Scripts/dmg/fond.tiff

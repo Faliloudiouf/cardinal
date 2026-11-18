@@ -103,23 +103,23 @@
 .valeur-zoom { min-width: 46px; height: 26px; border: 0; border-radius: 7px; background: transparent; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--encre-2); }
 .valeur-zoom:hover { background: var(--survol); }
 .choix-sgbd { width: 150px; height: 30px; }
-/* Ruban adaptatif : quand la place manque, les outils perdent d'abord leur légende
-   (l'infobulle la donne toujours), en commençant par les groupes les plus fournis. */
-@container (max-width: 1400px) {
-  .groupe-outils .libelle-ruban, .groupe-fichier .libelle-ruban { display: none; }
-  .groupe-outils .bouton-ruban, .groupe-fichier .bouton-ruban { min-width: 32px; padding: 3px 1px; }
-  .groupe { padding: 0 6px; }
+/* Ruban adaptatif : la densité (large, moyen, petit) est choisie par le composant selon la place.
+   Les noms restent toujours visibles ; seuls les espacements se resserrent. */
+.densite-moyen .groupe, .densite-petit .groupe { padding: 0 5px; }
+.densite-moyen .bouton-ruban, .densite-petit .bouton-ruban { min-width: 44px; padding: 3px 4px; }
+.densite-petit .bouton-ruban { min-width: 40px; padding: 3px 2px; }
+.groupe.grille-2 .groupe-contenu { grid-template-columns: repeat(2, auto); }
+.petit-ruban:has(.petit-libelle) { width: auto; justify-content: start; display: flex; gap: 6px; padding: 0 8px 0 6px; }
+.petit-libelle { font-size: 11.5px; font-weight: 500; color: var(--encre); white-space: nowrap; }
+.petit-ruban:disabled .petit-libelle { color: var(--encre-3); }
+.petit-ruban[aria-pressed='true'] .petit-libelle { color: var(--accent); }
+.bouton-menu-ruban .menu-declencheur {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  min-width: 50px; height: 54px; padding: 3px 6px; border: 0; border-radius: 8px; background: transparent; color: var(--encre);
+  transition: background-color 120ms ease, transform 120ms var(--sortie);
 }
-@container (max-width: 1180px) {
-  .groupe-formalisme .libelle-ruban, .groupe-pointeur .libelle-ruban, .groupe-zoom .libelle-ruban, .ruban-fin .libelle-ruban { display: none; }
-  .ruban-fin .bouton-ruban { min-width: 36px; }
-  .groupe-formalisme .bouton-ruban, .groupe-pointeur .bouton-ruban, .groupe-zoom .bouton-ruban { min-width: 32px; padding: 3px 1px; }
-  .valeur-zoom { min-width: 40px; }
-}
-@container (max-width: 940px) {
-  .groupe { padding: 0 4px; }
-  .groupe .groupe-titre { font-size: 10px; }
-}
+.bouton-menu-ruban .menu-declencheur:hover { background: var(--survol); }
+.bouton-menu-ruban .menu-declencheur:active { transform: scale(0.96); }
 
 /* Menus : en position fixe pour sortir du ruban qui défile horizontalement. */
 .menu { position: relative; display: flex; }

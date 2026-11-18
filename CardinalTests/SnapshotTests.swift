@@ -92,7 +92,7 @@ struct SnapshotTests {
                    appearance: .aqua, to: URL(fileURLWithPath: directory).appendingPathComponent("mcd_illustrations.png"))
 
         // Ruban adaptatif : large, moyen (boutons compacts), étroit.
-        for width in [1900, 1440, 1000] {
+        for width in [1900, 1440, 1300] {
             try render(ContentView(document: .constant(CardinalDocument(model: .exemple))), appearance: .aqua,
                        size: CGSize(width: CGFloat(width), height: 700),
                        to: URL(fileURLWithPath: directory).appendingPathComponent("ruban_\(width).png"))

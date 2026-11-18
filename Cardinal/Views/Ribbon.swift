@@ -16,13 +16,16 @@ struct Ribbon: View {
     private var files: DocumentActions { DocumentActions(newDocument: newDocument, openDocument: openDocument) }
 
     var body: some View {
-        // Le ruban tient dans la fenêtre : boutons complets si la place le permet, sinon boutons
-        // compacts (icône seule, nom en info-bulle) ; le défilement ne sert qu'en dernier recours.
+        // Le ruban tient dans la fenêtre, comme dans les logiciels de bureautique : étalé s'il y a
+        // la place (inspecteur fermé, grande fenêtre), puis resserré, puis avec des groupes repliés
+        // en boutons-menus. Chaque bouton garde toujours son nom ; le défilement est un dernier recours.
         ViewThatFits(in: .horizontal) {
-            groups.environment(\.ribbonCompact, false)
-            groups.environment(\.ribbonCompact, true)
+            groups.environment(\.ribbonDensity, .large)
+            groups.environment(\.ribbonDensity, .medium)
+            groups.environment(\.ribbonDensity, .small)
+            groups.environment(\.ribbonDensity, .tiny)
             ScrollView(.horizontal, showsIndicators: false) {
-                groups.environment(\.ribbonCompact, true)
+                groups.environment(\.ribbonDensity, .tiny)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -34,6 +37,7 @@ struct Ribbon: View {
             HStack(alignment: .top, spacing: 0) {
                 // Toujours visible, dans toutes les vues : créer, ouvrir, enregistrer.
                 RibbonGroup("Fichier") {
+                  DensitySwitch {
                     RibbonSplitButton(title: "Nouveau", help: "Nouveau modèle vide (⌘N) ; la flèche propose les exemples et les imports") {
                         Image(systemName: "doc.fill.badge.plus")
                     } action: {
@@ -75,13 +79,38 @@ struct Ribbon: View {
                     } action: {
                         DocumentActions.save()
                     }
+                  } tiny: {
+                    // Ruban très étroit : les commandes de fichier dans un seul bouton, comme le menu Fichier.
+                    RibbonMenuButton(title: "Fichier", systemImage: "doc.fill", help: "Nouveau, ouvrir, enregistrer") {
+                        Button("Nouveau modèle") { files.createEmpty() }
+                        Menu("Exemples") {
+                            Button("Gestion de commandes") { files.create(.exemple) }
+                            Button("Scolarité (héritage, CIF, règle)") { files.create(.exempleScolarite) }
+                        }
+                        Divider()
+                        Button("Ouvrir…") { Task { await files.chooseAndOpen() } }
+                        Menu("Ouvrir un fichier récent") {
+                            ForEach(RecentFiles.urls.prefix(10), id: \.self) { url in
+                                Button(url.deletingPathExtension().lastPathComponent) { Task { await files.open(url) } }
+                            }
+                        }
+                        .disabled(RecentFiles.urls.isEmpty)
+                        Divider()
+                        Button("Enregistrer") { DocumentActions.save() }
+                        Divider()
+                        Button("Importer depuis Looping…") { Task { await files.chooseAndOpen(types: [.loopingModel]) } }
+                        Button("Rétroconception d'un script SQL…") { files.reverseEngineerSQL() }
+                    }
+                  }
                 }
                 RibbonDivider()
                 RibbonGroup("Formalisme") {
-                    formalismButton(.mcd, title: "E/A", glyph: .formalismMCD, help: "Modèle Entité/Association (⌘1)")
-                    formalismButton(.mld, title: "MLD", glyph: .formalismMLD, help: "Modèle logique de données (⌘2)")
-                    formalismButton(.uml, title: "UML", glyph: .formalismUML, help: "Diagramme de classes UML (⌘3)")
-                    formalismButton(.sql, title: "SQL", glyph: .formalismSQL, help: "Script SQL de création des tables (⌘4)")
+                    FormalismOptions(state: state) {
+                        formalismButton(.mcd, title: "E/A", glyph: .formalismMCD, help: "Modèle Entité/Association (⌘1)")
+                        formalismButton(.mld, title: "MLD", glyph: .formalismMLD, help: "Modèle logique de données (⌘2)")
+                        formalismButton(.uml, title: "UML", glyph: .formalismUML, help: "Diagramme de classes UML (⌘3)")
+                        formalismButton(.sql, title: "SQL", glyph: .formalismSQL, help: "Script SQL de création des tables (⌘4)")
+                    }
                 }
                 switch state.mode {
                 case .mld: mldGroups
@@ -106,13 +135,15 @@ struct Ribbon: View {
                     }
                     RibbonDivider()
                     RibbonGroup("Illustration") {
-                        toolButton(.note)
-                        // Formes en grille compacte, comme les alignements du groupe Organiser.
-                        Grid(horizontalSpacing: 2, verticalSpacing: 2) {
-                            GridRow { shapeButton(.rectangle); shapeButton(.ellipse); shapeButton(.image) }
-                            GridRow { shapeButton(.line); shapeButton(.arrow) }
+                        DensitySwitch { toolButton(.note) } tiny: { EmptyView() }
+                        ShapeOptions(state: state) {
+                            // Formes en grille compacte, comme les alignements du groupe Organiser.
+                            Grid(horizontalSpacing: 2, verticalSpacing: 2) {
+                                GridRow { shapeButton(.rectangle); shapeButton(.ellipse); shapeButton(.image) }
+                                GridRow { shapeButton(.line); shapeButton(.arrow) }
+                            }
+                            .padding(.trailing, 4)
                         }
-                        .padding(.trailing, 4)
                     }
                     RibbonDivider()
                     RibbonGroup("Affichage") {
@@ -353,12 +384,8 @@ private struct ArrangeOptions<Full: View, Items: View>: View {
 
     var body: some View {
         if ribbonCompact {
-            // La légende du groupe porte déjà le nom : l'icône suffit.
-            Menu { menu } label: { Label("Organiser", systemImage: "square.3.layers.3d.top.filled").labelStyle(.iconOnly) }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                .padding(.top, 12)
-                .help("Aligner, premier plan, arrière-plan, dupliquer")
+            RibbonMenuButton(title: "Organiser", systemImage: "square.3.layers.3d.top.filled",
+                             help: "Aligner, premier plan, arrière-plan, dupliquer") { menu }
         } else {
             full
         }
@@ -372,18 +399,12 @@ private struct DisplayOptions: View {
 
     var body: some View {
         if compact {
-            Menu {
+            RibbonMenuButton(title: "Afficher", systemImage: "eye.fill", help: "Propriétés, types, grille, dépendances") {
                 Toggle("Propriétés", isOn: $settings.showAttributes)
                 Toggle("Types de données", isOn: $settings.showTypes).disabled(!settings.showAttributes)
                 Toggle("Grille", isOn: $settings.showGrid)
                 Toggle("Dépendances fonctionnelles", isOn: $settings.showDependencies)
-            } label: {
-                Label("Affichage", systemImage: "eye.fill").labelStyle(.iconOnly)
             }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .padding(.top, 12)
-            .help("Propriétés, types, grille, dépendances")
         } else {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
@@ -409,8 +430,30 @@ private struct ZoomControl: View {
     var canFit = true
     @Environment(\.ribbonCompact) private var compact
 
+    @Environment(\.ribbonDensity) private var density
+
     var body: some View {
-        if compact { compactBody } else { fullBody }
+        switch density {
+        case .large: fullBody
+        case .medium: compactBody
+        case .small, .tiny: menuBody
+        }
+    }
+
+    /// Replié : un bouton au pourcentage actuel, qui ouvre les commandes de zoom.
+    private var menuBody: some View {
+        RibbonMenuButton(title: "\(Int((state.zoom * 100).rounded())) %", systemImage: "magnifyingglass", help: "Zoom") {
+            Button("Zoom avant") { state.zoomIn() }
+            Button("Zoom arrière") { state.zoomOut() }
+            Divider()
+            ForEach([0.5, 0.75, 1.0, 1.25, 1.5, 2.0], id: \.self) { value in
+                Button("\(Int(value * 100)) %") { state.zoom = value }
+            }
+            if canFit {
+                Divider()
+                Button("Ajuster à la fenêtre") { state.fit() }
+            }
+        }
     }
 
     /// Compact : − , pourcentage (menu des paliers), +.
@@ -480,6 +523,7 @@ private struct ZoomControl: View {
 private struct RibbonGroup<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
+    @Environment(\.ribbonDensity) private var density
 
     init(_ title: String, @ViewBuilder content: () -> Content) {
         self.title = title
@@ -496,31 +540,139 @@ private struct RibbonGroup<Content: View>: View {
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, density == .large ? 4 : 1)
         .fixedSize()
     }
 }
 
 private struct RibbonDivider: View {
+    @Environment(\.ribbonDensity) private var density
+
     var body: some View {
         Rectangle()
             .fill(Color(nsColor: .separatorColor))
             .frame(width: 1, height: 62)
-            .padding(.horizontal, 6)
+            .padding(.horizontal, density == .large ? 6 : 3)
             .padding(.top, 2)
     }
 }
 
-/// Bouton du ruban : miniature (ou symbole) au-dessus d'un libellé court.
-private struct RibbonCompactKey: EnvironmentKey {
-    static let defaultValue = false
+/// Densité du ruban : étalé, resserré (boutons plus étroits, petits groupes en menus),
+/// replié (les formes d'illustration aussi). Les boutons gardent toujours leur nom.
+enum RibbonDensity: Sendable { case large, medium, small, tiny }
+
+private struct RibbonDensityKey: EnvironmentKey {
+    static let defaultValue = RibbonDensity.large
 }
 
 extension EnvironmentValues {
-    /// Ruban compact : les boutons n'affichent que leur icône (le nom reste en info-bulle).
-    var ribbonCompact: Bool {
-        get { self[RibbonCompactKey.self] }
-        set { self[RibbonCompactKey.self] = newValue }
+    var ribbonDensity: RibbonDensity {
+        get { self[RibbonDensityKey.self] }
+        set { self[RibbonDensityKey.self] = newValue }
+    }
+
+    /// Resserré ou replié.
+    var ribbonCompact: Bool { ribbonDensity != .large }
+}
+
+/// Groupe replié en un seul bouton : symbole, nom et flèche, qui ouvre un menu.
+struct RibbonMenuButton<Icon: View, Items: View>: View {
+    let title: String
+    let help: String
+    @ViewBuilder let icon: Icon
+    @ViewBuilder let items: Items
+
+    var body: some View {
+        Menu {
+            items
+        } label: {
+            VStack(spacing: 4) {
+                icon
+                    .font(.system(size: 17, weight: .medium))
+                    .frame(width: 30, height: 24)
+                Text(title + " ▾")
+                    .font(.system(size: 10.5))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .padding(.horizontal, 5)
+            .padding(.vertical, 4)
+            .frame(minWidth: 48)
+            .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .menuStyle(.button)
+        .buttonStyle(RibbonButtonStyle())
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .foregroundStyle(Color.primary)
+        .help(help)
+        .accessibilityLabel(title)
+    }
+}
+
+/// Contenu normal, ou contenu replié quand le ruban est très étroit.
+private struct DensitySwitch<Full: View, Tiny: View>: View {
+    @ViewBuilder let full: Full
+    @ViewBuilder let tiny: Tiny
+    @Environment(\.ribbonDensity) private var density
+
+    var body: some View {
+        if density == .tiny { tiny } else { full }
+    }
+}
+
+extension RibbonMenuButton where Icon == Image {
+    init(title: String, systemImage: String, help: String, @ViewBuilder items: () -> Items) {
+        self.init(title: title, help: help, icon: { Image(systemName: systemImage) }, items: items)
+    }
+}
+
+/// Formalisme : quatre boutons, ou un seul bouton-menu au nom du formalisme affiché (ruban très étroit).
+private struct FormalismOptions<Full: View>: View {
+    @ObservedObject var state: WindowState
+    @ViewBuilder let full: Full
+    @Environment(\.ribbonDensity) private var density
+
+    private var choices: [(ViewMode, String, Glyph)] { [
+        (.mcd, "E/A", .formalismMCD), (.mld, "MLD", .formalismMLD), (.uml, "UML", .formalismUML), (.sql, "SQL", .formalismSQL),
+    ] }
+
+    var body: some View {
+        if density == .tiny {
+            let current = choices.first { $0.0 == state.mode } ?? choices[0]
+            RibbonMenuButton(title: current.1, help: "Changer de formalisme (⌘1 à ⌘4)") {
+                GlyphView(glyph: current.2)
+            } items: {
+                ForEach(choices, id: \.0) { choice in
+                    Toggle(choice.1 == "E/A" ? "Entité/Association (E/A)" : choice.1,
+                           isOn: Binding { state.mode == choice.0 } set: { if $0 { state.mode = choice.0 } })
+                }
+            }
+        } else {
+            full
+        }
+    }
+}
+
+/// Formes d'illustration : grille de petits boutons, ou un bouton « Formes » quand le ruban est replié.
+private struct ShapeOptions<Full: View>: View {
+    @ObservedObject var state: WindowState
+    @ViewBuilder let full: Full
+    @Environment(\.ribbonDensity) private var density
+
+    var body: some View {
+        if density == .small || density == .tiny {
+            // Très étroit : le texte rejoint les formes dans un bouton « Insérer ».
+            let tools: [Tool] = density == .tiny ? [.note, .rectangle, .ellipse, .image, .line, .arrow] : [.rectangle, .ellipse, .image, .line, .arrow]
+            RibbonMenuButton(title: density == .tiny ? "Insérer" : "Formes", systemImage: "square.on.circle.fill",
+                             help: density == .tiny ? "Texte, rectangle, ellipse, image, trait, flèche" : "Rectangle, ellipse, image, trait, flèche") {
+                ForEach(tools, id: \.self) { tool in
+                    Button { state.tool = tool } label: { Label(tool.label, systemImage: tool.symbol) }
+                }
+            }
+        } else {
+            full
+        }
     }
 }
 
@@ -569,6 +721,7 @@ struct RibbonButton<Icon: View>: View {
     @ViewBuilder let icon: Icon
     let action: () -> Void
     @Environment(\.ribbonCompact) private var compact
+    @Environment(\.ribbonDensity) private var density
 
     var body: some View {
         Button(action: action) {
@@ -576,17 +729,16 @@ struct RibbonButton<Icon: View>: View {
                 icon
                     .font(.system(size: 17, weight: .medium))
                     .frame(width: 30, height: 24)
-                if !compact {
-                    Text(title)
-                        .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
-                        .lineLimit(1)
-                        .fixedSize()
-                }
+                // Le nom reste toujours visible : seul l'espace autour se resserre.
+                Text(title)
+                    .font(.system(size: compact ? 10.5 : 11, weight: isSelected ? .semibold : .regular))
+                    .lineLimit(1)
+                    .fixedSize()
             }
             .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
-            .padding(.horizontal, compact ? 3 : 7)
+            .padding(.horizontal, density == .tiny ? 1 : (compact ? 2 : 7))
             .padding(.vertical, 4)
-            .frame(minWidth: compact ? 36 : 56, minHeight: compact ? 46 : nil)
+            .frame(minWidth: density == .tiny ? 34 : (compact ? 40 : 56))
             .background {
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(isSelected ? Color.accentColor.opacity(0.16) : Color.clear)
@@ -600,7 +752,7 @@ struct RibbonButton<Icon: View>: View {
             .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
         .buttonStyle(RibbonButtonStyle())
-        .help(compact ? "\(title) — \(help)" : help)
+        .help(help)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }

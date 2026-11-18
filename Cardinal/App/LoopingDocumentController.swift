@@ -28,6 +28,7 @@ enum LooImport {
                         }
                     }
                 }
+                BlankDocument.replaceIfNeeded()
             }
         }
     }
@@ -48,6 +49,34 @@ enum LooImport {
         LooImport.names[ObjectIdentifier(document)] = name
         // Le modèle converti n'est pas encore enregistré : la fermeture proposera de le sauvegarder en .mcd.
         document.updateChangeCount(.changeDone)
+    }
+}
+
+/// Comme Pages ou Word : ouvrir un fichier alors que la seule fenêtre est un « Sans titre »
+/// encore vierge (jamais modifié, jamais enregistré) remplace cette fenêtre au lieu d'en laisser deux.
+@MainActor
+enum BlankDocument {
+    private static var known: Set<ObjectIdentifier> = []
+
+    static func isBlank(_ document: NSDocument) -> Bool {
+        document.fileURL == nil && !document.isDocumentEdited && LooImport.names[ObjectIdentifier(document)] == nil
+    }
+
+    static func replaceIfNeeded() {
+        let documents = NSDocumentController.shared.documents
+        // Un document n'est « connu » qu'une fois sa fenêtre créée : celui dont la fenêtre arrive
+        // un peu plus tard est encore traité comme nouveau au passage suivant.
+        defer { known = Set(documents.filter { !$0.windowControllers.isEmpty }.map(ObjectIdentifier.init)) }
+        // Documents apparus depuis le dernier passage, venant d'un fichier (.mcd, ou .loo importé).
+        let opened = documents.filter { !known.contains(ObjectIdentifier($0)) && !isBlank($0) && !$0.windowControllers.isEmpty }
+        guard let newcomer = opened.first, newcomer.fileURL != nil || LooImport.names[ObjectIdentifier(newcomer)] != nil else { return }
+        let blanks = documents.filter { known.contains(ObjectIdentifier($0)) && isBlank($0) }
+        guard !blanks.isEmpty else { return }
+        // Le fichier ouvert prend la place (position et taille) de la fenêtre remplacée.
+        if let frame = blanks.first?.windowControllers.first?.window?.frame {
+            newcomer.windowControllers.first?.window?.setFrame(frame, display: true)
+        }
+        for blank in blanks { blank.close() }
     }
 }
 
