@@ -28,6 +28,8 @@ docker run --rm --platform linux/amd64 \
       printf "#!/bin/sh\nexec \"/outils/%s/AppRun\" \"\$@\"\n" "$outil" > "$outil" && chmod +x "$outil"
     done
     cd /travail
-    npx tauri build --bundles appimage
-    rm -rf /sortie/* && cp /cible/release/bundle/deb/*.deb /cible/release/bundle/rpm/*.rpm /cible/release/bundle/appimage/*.AppImage /sortie/
+    # L'AppImage reste facultative : son outil d'emballage échoue encore dans un conteneur.
+    npx tauri build --bundles appimage || echo "AppImage non produite"
+    rm -rf /sortie/* && cp /cible/release/bundle/deb/*.deb /cible/release/bundle/rpm/*.rpm /sortie/
+    cp /cible/release/bundle/appimage/*.AppImage /sortie/ 2>/dev/null || true
     ls -la /sortie'
