@@ -1,0 +1,176 @@
+/* Cardinal pour Windows et Linux — même identité que la version Mac.
+   Palette « académique » : bleu institutionnel pour les entités (dominante), ambre pour les
+   associations et les cardinalités (accent), neutres légèrement chauds pour le papier.
+   Chaque couleur a sa variante sombre, contraste WCAG AA vérifié sur le fond correspondant. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/600.css';
+
+:root {
+  color-scheme: light;
+  --papier: #ffffff;
+  --canevas: #f7f6f2;
+  --grille: #e3e1da;
+  --chrome: rgba(252, 251, 249, 0.86);
+  --chrome-plein: #fcfbf9;
+  --panneau: #fbfaf7;
+  --trait: rgba(30, 32, 40, 0.11);
+  --trait-fort: rgba(30, 32, 40, 0.2);
+  --encre: #1c1e24;
+  --encre-2: #5a5e69;
+  --encre-3: #8c909a;
+  --survol: rgba(30, 40, 60, 0.06);
+  --appui: rgba(30, 40, 60, 0.11);
+
+  --entite: #244a85;
+  --entite-fond: #244a85;
+  --association: #9e5c0a;
+  --contrainte: #73409e;
+  --cif: #bf2929;
+  --regle: #1a736b;
+  --lien: rgba(28, 30, 36, 0.48);
+  --accent: #2563d9;
+  --accent-doux: rgba(37, 99, 217, 0.12);
+  --erreur: #c0262d;
+  --avertissement: #a35a00;
+  --succes: #1d7a46;
+
+  --ombre-1: 0 1px 2px rgba(20, 24, 32, 0.06), 0 2px 6px rgba(20, 24, 32, 0.05);
+  --ombre-2: 0 6px 20px rgba(20, 24, 32, 0.12), 0 1px 3px rgba(20, 24, 32, 0.08);
+  --ombre-3: 0 24px 60px rgba(20, 24, 32, 0.22), 0 4px 12px rgba(20, 24, 32, 0.1);
+
+  --police: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+  --sortie: cubic-bezier(0.23, 1, 0.32, 1);
+
+  font-family: var(--police);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--encre);
+  background: var(--canevas);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --papier: #1f2126;
+    --canevas: #16171b;
+    --grille: #2a2c32;
+    --chrome: rgba(30, 32, 37, 0.86);
+    --chrome-plein: #1e2025;
+    --panneau: #1b1d21;
+    --trait: rgba(255, 255, 255, 0.09);
+    --trait-fort: rgba(255, 255, 255, 0.17);
+    --encre: #eceef2;
+    --encre-2: #a8adb8;
+    --encre-3: #747985;
+    --survol: rgba(255, 255, 255, 0.06);
+    --appui: rgba(255, 255, 255, 0.11);
+    --entite: #8fb3f2;
+    --entite-fond: #2e59a1;
+    --association: #eda84f;
+    --contrainte: #bd99eb;
+    --cif: #f26b66;
+    --regle: #73ccc2;
+    --lien: rgba(236, 238, 242, 0.5);
+    --accent: #5b9bff;
+    --accent-doux: rgba(91, 155, 255, 0.16);
+    --erreur: #ff7a7f;
+    --avertissement: #f0b45c;
+    --succes: #5fd394;
+    --ombre-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+    --ombre-2: 0 6px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --ombre-3: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --papier: #1f2126;
+  --canevas: #16171b;
+  --grille: #2a2c32;
+  --chrome: rgba(30, 32, 37, 0.86);
+  --chrome-plein: #1e2025;
+  --panneau: #1b1d21;
+  --trait: rgba(255, 255, 255, 0.09);
+  --trait-fort: rgba(255, 255, 255, 0.17);
+  --encre: #eceef2;
+  --encre-2: #a8adb8;
+  --encre-3: #747985;
+  --survol: rgba(255, 255, 255, 0.06);
+  --appui: rgba(255, 255, 255, 0.11);
+  --entite: #8fb3f2;
+  --entite-fond: #2e59a1;
+  --association: #eda84f;
+  --contrainte: #bd99eb;
+  --cif: #f26b66;
+  --regle: #73ccc2;
+  --lien: rgba(236, 238, 242, 0.5);
+  --accent: #5b9bff;
+  --accent-doux: rgba(91, 155, 255, 0.16);
+  --erreur: #ff7a7f;
+  --avertissement: #f0b45c;
+  --succes: #5fd394;
+  --ombre-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --ombre-2: 0 6px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --ombre-3: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { overflow: hidden; background: var(--canevas); user-select: none; -webkit-user-select: none; }
+button { font: inherit; color: inherit; }
+input, textarea, select { font: inherit; color: inherit; }
+textarea, input[type='text'], input[type='number'], input:not([type]) { user-select: text; -webkit-user-select: text; }
+::selection { background: var(--accent-doux); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.mono { font-family: var(--mono); }
+
+/* ---------- Boutons communs ---------- */
+
+.bouton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 30px; padding: 0 14px; border-radius: 8px;
+  border: 1px solid var(--trait-fort); background: var(--papier);
+  font-weight: 500; cursor: default; box-shadow: var(--ombre-1);
+  transition: transform 120ms var(--sortie), background-color 120ms ease;
+}
+.bouton:hover { background: color-mix(in srgb, var(--papier) 92%, var(--encre)); }
+.bouton:active { transform: scale(0.97); }
+.bouton:disabled { opacity: 0.45; transform: none; }
+.bouton.principal { background: var(--accent); border-color: transparent; color: #fff; }
+.bouton.principal:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+.bouton.danger { color: var(--erreur); }
+
+.champ {
+  height: 28px; padding: 0 9px; border-radius: 7px; width: 100%;
+  border: 1px solid var(--trait-fort); background: var(--papier);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.champ:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-doux); }
+textarea.champ { height: auto; padding: 7px 9px; resize: vertical; line-height: 1.45; }
+select.champ { padding-right: 4px; }
+
+.case { display: inline-flex; align-items: center; gap: 7px; cursor: default; }
+.case input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+
+.segmente {
+  display: inline-flex; padding: 2px; border-radius: 8px; background: var(--survol); gap: 2px;
+}
+.segmente button {
+  border: 0; background: transparent; height: 24px; padding: 0 10px; border-radius: 6px;
+  font-size: 12px; font-weight: 500; color: var(--encre-2);
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.segmente button[aria-pressed='true'] { background: var(--papier); color: var(--encre); box-shadow: var(--ombre-1); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; }
+}

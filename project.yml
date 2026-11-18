@@ -1,0 +1,96 @@
+name: Cardinal
+options:
+  bundleIdPrefix: sn.cardinal
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+  developmentLanguage: fr
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+targets:
+  Cardinal:
+    type: application
+    platform: macOS
+    # Le moteur portable (Core/) est compilé avec l'app ; il se compile aussi seul avec SwiftPM.
+    sources: [Cardinal, Core/Sources/CardinalCore]
+    info:
+      path: Cardinal/Info.plist
+      properties:
+        CFBundleDisplayName: Cardinal
+        CFBundleDevelopmentRegion: fr
+        CFBundleLocalizations: [fr]
+        CFBundleAllowMixedLocalizations: true
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.education
+        NSHumanReadableCopyright: Cardinal — modélisation Merise pour macOS
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Modèle Cardinal
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Owner
+            LSItemContentTypes: [sn.cardinal.mcd]
+            # Icône des fichiers .mcd générée par macOS à partir de celle de l'app.
+            CFBundleTypeIconSystemGenerated: 1
+          - CFBundleTypeName: Modèle Looping
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            LSItemContentTypes: [sn.cardinal.looping-loo]
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: sn.cardinal.mcd
+            UTTypeDescription: Modèle conceptuel Cardinal
+            # Document Cardinal (du JSON à l'intérieur) : le Finder montre son icône, pas son texte.
+            UTTypeConformsTo: [public.data, public.content]
+            UTTypeIcons:
+              UTTypeIconBadgeName: AppIcon
+              UTTypeIconText: MCD
+            UTTypeTagSpecification:
+              public.filename-extension: [mcd]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: sn.cardinal.looping-loo
+            UTTypeDescription: Modèle Looping
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [loo, LOO]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: sn.cardinal.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  CardinalTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - CardinalTests
+      - path: Core/Tests/CardinalCoreTests
+        excludes: [Fixtures]
+    dependencies:
+      - target: Cardinal
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: sn.cardinal.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Cardinal:
+    build:
+      targets:
+        Cardinal: all
+        CardinalTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [CardinalTests]
+      # La copie de test ne doit jamais apparaître dans la liste des applications de macOS.
+      postActions:
+        - name: Retirer la copie de test de LaunchServices
+          settingsTarget: Cardinal
+          script: |
+            /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}" || true
+    archive:
+      config: Release

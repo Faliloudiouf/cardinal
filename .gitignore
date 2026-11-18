@@ -1,0 +1,21 @@
+# Produits de construction
+build.noindex/
+dist/
+DerivedData/
+.build/
+*.xcuserstate
+xcuserdata/
+Cardinal.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Version Windows / Linux
+Portable/app/node_modules/
+Portable/app/dist/
+Portable/app/public/cardinal.wasm
+Portable/app/src-tauri/target/
+Portable/app/src-tauri/gen/
+Portable/moteur/.build/
+
+# Divers
+.DS_Store
+.claude/
+*.log

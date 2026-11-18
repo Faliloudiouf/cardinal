@@ -1,0 +1,106 @@
+/* Dessin des diagrammes (MCD, MLD, UML). Les couleurs suivent le thème clair / sombre. */
+
+.diagramme text { font-family: var(--police); }
+
+/* Couleurs personnalisées des nœuds : fond (texte blanc dessus) et encre (traits, textes). */
+.c-bleu { --c-fond: #2961b3; --c-encre: #2961b3; }
+.c-sarcelle { --c-fond: #0d7378; --c-encre: #0d7378; }
+.c-vert { --c-fond: #2b7838; --c-encre: #2b7838; }
+.c-violet { --c-fond: #6b42a3; --c-encre: #6b42a3; }
+.c-rouge { --c-fond: #a83333; --c-encre: #a83333; }
+.c-ardoise { --c-fond: #4a5466; --c-encre: #4a5466; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .c-bleu { --c-encre: #94b0d9; }
+  :root:not([data-theme='light']) .c-sarcelle { --c-encre: #86b9bb; }
+  :root:not([data-theme='light']) .c-vert { --c-encre: #95bb9b; }
+  :root:not([data-theme='light']) .c-violet { --c-encre: #b5a0d1; }
+  :root:not([data-theme='light']) .c-rouge { --c-encre: #d39999; }
+  :root:not([data-theme='light']) .c-ardoise { --c-encre: #a4a9b2; }
+}
+:root[data-theme='dark'] .c-bleu { --c-encre: #94b0d9; }
+:root[data-theme='dark'] .c-sarcelle { --c-encre: #86b9bb; }
+:root[data-theme='dark'] .c-vert { --c-encre: #95bb9b; }
+:root[data-theme='dark'] .c-violet { --c-encre: #b5a0d1; }
+:root[data-theme='dark'] .c-rouge { --c-encre: #d39999; }
+:root[data-theme='dark'] .c-ardoise { --c-encre: #a4a9b2; }
+
+.noeud { cursor: default; }
+.noeud .corps { fill: var(--papier); filter: drop-shadow(0 1px 1.5px rgba(16, 20, 30, 0.08)) drop-shadow(0 2px 5px rgba(16, 20, 30, 0.06)); }
+.souleve-anim .noeud .corps { filter: drop-shadow(0 8px 14px rgba(16, 20, 30, 0.2)); }
+.noeud .contour { fill: none; stroke-width: 1; }
+.noeud .contour.pointille { stroke-dasharray: 5 3; }
+.noeud.choisi .contour { stroke: var(--accent) !important; stroke-width: 2; stroke-opacity: 1 !important; stroke-dasharray: none; }
+.halo-attente { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
+
+/* Entité */
+.entite { --encre-n: var(--c-encre, var(--entite)); --fond-n: var(--c-fond, var(--entite-fond)); }
+.entite .entete { fill: var(--fond-n); }
+.entite .entete.fictive { fill: var(--encre-n); fill-opacity: 0.12; }
+.entite .contour { stroke: var(--encre-n); stroke-opacity: 0.6; }
+.titre-entite { fill: #fff; font-size: 13px; font-weight: 600; letter-spacing: 0.3px; text-anchor: middle; }
+.titre-entite.fictive { fill: var(--encre-n); font-style: italic; }
+.mention-fictive { font-size: 9px; font-style: normal; opacity: 0.75; letter-spacing: 0.4px; }
+.attribut { fill: var(--encre); font-size: 12px; }
+.attribut.identifiant { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.attribut.vide { fill: var(--encre-3); }
+.aucune { fill: var(--encre-3); font-size: 11px; }
+.type-attribut { fill: var(--encre-2); font-size: 10.5px; font-family: var(--mono); text-anchor: end; }
+.badge-u { fill: var(--encre-n); font-size: 8.5px; font-weight: 800; }
+.cle { fill: var(--encre-n); }
+
+/* Association */
+.association { --encre-n: var(--c-encre, var(--association)); }
+.association .voile { fill: var(--encre-n); fill-opacity: 0.09; }
+.association .contour { stroke: var(--encre-n); stroke-opacity: 0.6; }
+.titre-association { fill: var(--encre-n); font-size: 12.5px; font-weight: 600; letter-spacing: 0.2px; text-anchor: middle; }
+.association .separateur { stroke: var(--encre-n); stroke-opacity: 0.35; stroke-width: 0.5; }
+
+/* Héritage, contraintes, règles */
+.heritage .contour { stroke: var(--entite); stroke-opacity: 0.8; stroke-width: 1.25; stroke-linejoin: round; }
+.sigle-heritage { fill: var(--entite); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.contrainte { --encre-n: var(--contrainte); }
+.contrainte.cif { --encre-n: var(--cif); }
+.contrainte .voile { fill: var(--encre-n); fill-opacity: 0.1; }
+.contrainte .contour { stroke: var(--encre-n); stroke-opacity: 0.7; }
+.sigle-contrainte { fill: var(--encre-n); font-size: 13px; font-weight: 700; text-anchor: middle; }
+.cif .sigle-contrainte { font-size: 11px; }
+.regle .voile { fill: var(--regle); fill-opacity: 0.08; }
+.regle .contour { stroke: var(--regle); stroke-opacity: 0.7; }
+.titre-regle { fill: var(--regle); font-size: 12px; font-weight: 500; text-anchor: middle; }
+
+/* Notes et titres */
+.fond-note { fill: transparent; }
+.note:not(.titre) .fond-note { fill: var(--encre); fill-opacity: 0.04; }
+.contour-note { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.choisi .contour-note { stroke-width: 2; }
+.texte-titre { fill: var(--encre); font-size: 20px; font-weight: 700; text-anchor: middle; letter-spacing: -0.2px; }
+.texte-note { fill: var(--encre); font-size: 12.5px; }
+
+/* Illustrations */
+.figure { --encre-n: var(--c-encre, var(--encre-2)); }
+.figure .forme { fill: transparent; stroke: var(--encre-n); stroke-width: 1.5; }
+.figure.remplie .forme { fill: var(--encre-n); fill-opacity: 0.12; }
+.figure .trait { stroke: var(--encre-n); stroke-width: 1.8; stroke-linecap: round; }
+.figure .zone-trait { stroke: transparent; stroke-width: 14; stroke-linecap: round; }
+.figure .pointe { fill: var(--encre-n); }
+.figure.choisi .forme, .figure.choisi .trait { stroke: var(--accent); }
+.image-vide { fill: var(--encre); fill-opacity: 0.06; }
+.cadre-choix { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+/* Liens */
+.patte { fill: none; stroke: var(--lien); stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; }
+.fleche-df { fill: var(--lien); }
+.pastille { fill: var(--papier); stroke: var(--association); stroke-opacity: 0.35; stroke-width: 0.75; }
+.pastille-texte { fill: var(--association); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.lien-heritage { stroke: var(--entite); stroke-opacity: 0.55; stroke-width: 1.25; stroke-linecap: round; }
+.lien-heritage.parent { stroke-opacity: 0.7; stroke-width: 1.5; }
+.lien-contrainte { stroke: var(--contrainte); stroke-opacity: 0.8; stroke-width: 1.2; stroke-dasharray: 5 4; stroke-linecap: round; }
+.fleche-contrainte { fill: var(--contrainte); }
+.lien-regle { stroke: var(--regle); stroke-opacity: 0.75; stroke-width: 1; stroke-dasharray: 2 3; stroke-linecap: round; }
+
+/* Poignées */
+.poignee { fill: var(--papier); stroke: var(--association); stroke-width: 2; cursor: grab; transition: r 120ms var(--sortie); }
+.poignee:hover { r: 7; }
+.poignee-zone { fill: transparent; cursor: grab; }
+.lasso { fill: var(--accent-doux); stroke: var(--accent); stroke-width: 1; }
+.trace-patte { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }

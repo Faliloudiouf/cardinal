@@ -1,0 +1,122 @@
+# Construit Cardinal pour Windows et Linux à chaque version (étiquette v*) ou à la demande.
+# 1. Le moteur Swift est compilé en WebAssembly (Linux, Swift 6.4.2 + SDK WebAssembly).
+# 2. L'application Tauri est construite sur Windows (installeurs .exe et .msi)
+#    et sur Linux (paquets .deb, .rpm et .AppImage), avec ce même moteur.
+name: Windows et Linux
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+env:
+  SWIFT_VERSION: 6.4.2
+  WASM_SDK_URL: https://download.swift.org/swift-6.4.2-release/wasm-sdk/swift-6.4.2-RELEASE/swift-6.4.2-RELEASE_wasm.artifactbundle.tar.gz
+  WASM_SDK_CHECKSUM: 83baca83553f8c443cda7b84800912e6e709c3acd2e7ebf277794ca5836c0da5
+
+jobs:
+  moteur:
+    name: Moteur WebAssembly
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Swift et le SDK WebAssembly
+        run: |
+          curl -fsSLO "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+          tar zxf "swiftly-$(uname -m).tar.gz"
+          ./swiftly init --quiet-shell-followup --assume-yes --skip-install
+          . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+          swiftly install "$SWIFT_VERSION" --use --assume-yes
+          hash -r
+          swift --version
+          swift sdk install "$WASM_SDK_URL" --checksum "$WASM_SDK_CHECKSUM"
+          echo "${SWIFTLY_BIN_DIR:-$HOME/.local/share/swiftly/bin}" >> "$GITHUB_PATH"
+
+      - name: Tester le moteur (Linux)
+        working-directory: Core
+        # Les tests renseignent sur la fiabilité sous Linux, sans bloquer les installeurs.
+        continue-on-error: true
+        run: swift test
+
+      - name: Compiler le moteur en WebAssembly
+        working-directory: Portable/moteur
+        run: swift build --swift-sdk "swift-$SWIFT_VERSION-RELEASE_wasm" -c release
+
+      - name: Optimiser la taille
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq binaryen || true
+          SOURCE=Portable/moteur/.build/release/CardinalWasm.wasm
+          if command -v wasm-opt >/dev/null && wasm-opt -Oz --enable-bulk-memory --enable-sign-ext \
+               --enable-nontrapping-float-to-int --enable-mutable-globals --strip-debug --strip-producers \
+               "$SOURCE" -o cardinal.wasm; then
+            echo "Moteur optimisé"
+          else
+            cp "$SOURCE" cardinal.wasm
+          fi
+          ls -lh cardinal.wasm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moteur
+          path: cardinal.wasm
+          retention-days: 7
+
+  bureau:
+    name: Application ${{ matrix.nom }}
+    needs: moteur
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nom: Windows
+            os: windows-latest
+            paquets: nsis,msi
+          - nom: Linux
+            os: ubuntu-22.04
+            paquets: deb,rpm,appimage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: moteur
+          path: Portable/app/public
+
+      - name: Dépendances Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf rpm
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Portable/app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: Portable/app/src-tauri
+
+      - name: Installer les dépendances de l'interface
+        working-directory: Portable/app
+        run: npm ci
+
+      - name: Construire les installeurs
+        working-directory: Portable/app
+        run: npx tauri build --bundles ${{ matrix.paquets }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cardinal-${{ matrix.nom }}
+          path: |
+            Portable/app/src-tauri/target/release/bundle/nsis/*.exe
+            Portable/app/src-tauri/target/release/bundle/msi/*.msi
+            Portable/app/src-tauri/target/release/bundle/deb/*.deb
+            Portable/app/src-tauri/target/release/bundle/rpm/*.rpm
+            Portable/app/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error

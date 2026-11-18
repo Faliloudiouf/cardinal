@@ -1,0 +1,77 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Cardinal",
+  "mainBinaryName": "cardinal",
+  "version": "0.1.0",
+  "identifier": "com.faliloudiouf.cardinal",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5174",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Cardinal",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 900,
+        "minHeight": 560,
+        "center": true,
+        "resizable": true,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "deb", "rpm", "appimage", "app", "dmg"],
+    "publisher": "Falilou Diouf",
+    "copyright": "© 2026 Falilou Diouf",
+    "category": "DeveloperTool",
+    "shortDescription": "Conception de bases de données avec Merise",
+    "longDescription": "Cardinal dessine des MCD Merise et produit le MLD, le diagramme de classes UML et le script SQL pour MySQL, MariaDB, PostgreSQL, SQLite, SQL Server et Oracle. Il ouvre aussi les fichiers Looping (.loo).",
+    "homepage": "https://faliloudiouf.com/cardinal/",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["mcd"],
+        "name": "Modèle Cardinal",
+        "description": "Modèle conceptuel de données Cardinal",
+        "role": "Editor",
+        "mimeType": "application/x-cardinal-mcd"
+      },
+      {
+        "ext": ["loo"],
+        "name": "Modèle Looping",
+        "description": "Modèle Looping (ouvert par Cardinal)",
+        "role": "Viewer",
+        "mimeType": "application/x-looping"
+      }
+    ],
+    "windows": {
+      "nsis": {
+        "languages": ["French", "English"],
+        "displayLanguageSelector": false,
+        "installMode": "currentUser"
+      },
+      "wix": {
+        "language": ["fr-FR", "en-US"]
+      }
+    },
+    "linux": {
+      "deb": { "section": "devel" }
+    }
+  }
+}

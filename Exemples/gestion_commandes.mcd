@@ -1,0 +1,218 @@
+{
+  "associations" : [
+    {
+      "attributes" : [
+
+      ],
+      "color" : "auto",
+      "id" : "844168BB-61D6-457C-BBED-CDBD69175671",
+      "legs" : [
+        {
+          "cardinality" : "0,N",
+          "entityID" : "17389F81-A95C-4E9D-8EEB-D979997DF8F5",
+          "id" : "855CFD08-A42A-4A87-92C5-81EED212A353",
+          "isRelative" : false,
+          "role" : ""
+        },
+        {
+          "cardinality" : "1,1",
+          "entityID" : "8EA50BAD-CFA8-4991-A040-8A72380E5911",
+          "id" : "CEF1AD23-A5AA-470F-A4C3-A28A4ECD726B",
+          "isRelative" : false,
+          "role" : ""
+        }
+      ],
+      "name" : "Passer",
+      "position" : [
+        520,
+        220
+      ]
+    },
+    {
+      "attributes" : [
+        {
+          "id" : "96D02ED9-ACC5-4A1B-9F21-6924250147F2",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 50,
+          "name" : "quantite",
+          "type" : "entier"
+        }
+      ],
+      "color" : "auto",
+      "id" : "13F20DA3-543C-40B7-84EE-0D16DD655714",
+      "legs" : [
+        {
+          "cardinality" : "1,N",
+          "entityID" : "8EA50BAD-CFA8-4991-A040-8A72380E5911",
+          "id" : "489D8532-A560-4E42-AB0E-9F8D0530C4E8",
+          "isRelative" : false,
+          "role" : ""
+        },
+        {
+          "cardinality" : "0,N",
+          "entityID" : "3FECE215-EE5B-450D-A17C-E07235852F6A",
+          "id" : "0F80AAA0-2D3B-4E49-B53C-B1F51BBA1FFC",
+          "isRelative" : false,
+          "role" : ""
+        }
+      ],
+      "name" : "Contenir",
+      "position" : [
+        800,
+        500
+      ]
+    }
+  ],
+  "constraints" : [
+
+  ],
+  "entities" : [
+    {
+      "attributes" : [
+        {
+          "id" : "25F83382-D530-4C0E-B8F3-7D3318667EA7",
+          "isIdentifier" : true,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 50,
+          "name" : "id_client",
+          "type" : "entier"
+        },
+        {
+          "id" : "2C3FFD61-0669-4A74-B5D2-8BF1EF9B682E",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 60,
+          "name" : "nom",
+          "type" : "texteCourt"
+        },
+        {
+          "id" : "74CB6C91-0388-4FA5-8FF0-637E9706BDB2",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 60,
+          "name" : "prenom",
+          "type" : "texteCourt"
+        },
+        {
+          "id" : "72A7F818-82C0-45A9-A170-F06DC4BBCCBC",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 120,
+          "name" : "email",
+          "type" : "texteCourt"
+        }
+      ],
+      "color" : "auto",
+      "id" : "17389F81-A95C-4E9D-8EEB-D979997DF8F5",
+      "isFictive" : false,
+      "name" : "Client",
+      "position" : [
+        240,
+        220
+      ]
+    },
+    {
+      "attributes" : [
+        {
+          "id" : "FE5BD6A4-698D-485C-97C7-5D2E6F79CD89",
+          "isIdentifier" : true,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 50,
+          "name" : "num_commande",
+          "type" : "entier"
+        },
+        {
+          "id" : "72CE76F9-EE62-4FD2-915B-1D3EBB488365",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 50,
+          "name" : "date_commande",
+          "type" : "date"
+        }
+      ],
+      "color" : "auto",
+      "id" : "8EA50BAD-CFA8-4991-A040-8A72380E5911",
+      "isFictive" : false,
+      "name" : "Commande",
+      "position" : [
+        800,
+        220
+      ]
+    },
+    {
+      "attributes" : [
+        {
+          "id" : "1EAA3B55-056E-4F4A-AAB6-410DDDB7D8E2",
+          "isIdentifier" : true,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 20,
+          "name" : "ref_produit",
+          "type" : "texteCourt"
+        },
+        {
+          "id" : "80AB4582-7216-41B1-A0B4-8277D196367E",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 100,
+          "name" : "libelle",
+          "type" : "texteCourt"
+        },
+        {
+          "id" : "E8605D72-511B-49DC-954C-2169D0B00D92",
+          "isIdentifier" : false,
+          "isNotNull" : false,
+          "isUnique" : false,
+          "label" : "",
+          "length" : 50,
+          "name" : "prix",
+          "type" : "montant"
+        }
+      ],
+      "color" : "auto",
+      "id" : "3FECE215-EE5B-450D-A17C-E07235852F6A",
+      "isFictive" : false,
+      "name" : "Produit",
+      "position" : [
+        1200,
+        500
+      ]
+    }
+  ],
+  "inheritances" : [
+
+  ],
+  "notes" : [
+
+  ],
+  "rules" : [
+
+  ],
+  "settings" : {
+    "foreignKeysAtEnd" : false,
+    "naming" : "telQuel",
+    "showAttributes" : true,
+    "showGrid" : true,
+    "showTypes" : true,
+    "useLabels" : false
+  },
+  "version" : 1
+}
