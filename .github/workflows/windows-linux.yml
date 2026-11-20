@@ -23,6 +23,8 @@ jobs:
 
       - name: Installer Swift et le SDK WebAssembly
         run: |
+          # Dépendance exigée par la chaîne Swift : sans elle, swiftly s'arrête en erreur.
+          sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev
           curl -fsSLO "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
           tar zxf "swiftly-$(uname -m).tar.gz"
           ./swiftly init --quiet-shell-followup --assume-yes --skip-install
