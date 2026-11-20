@@ -88,3 +88,32 @@ CardinalTests/            Tests propres à l'interface (captures, types de docum
 Mini MCD : deux entités (bleu institutionnel, couleur des entités dans Cardinal) reliées par une
 association (ambre), avec les cardinalités 1,N et 0,N à partir de 256 px. Générée par
 `Scripts/icone/icone.swift` dans toutes les tailles de `Cardinal/Assets.xcassets/AppIcon.appiconset`.
+
+## Téléchargement
+
+Installeurs pour macOS, Windows et Linux : [faliloudiouf.com/cardinal](https://faliloudiouf.com/cardinal/)
+et [versions GitHub](https://github.com/Faliloudiouf/cardinal/releases).
+
+## Code signing policy
+
+Politique de signature du code.
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Seuls les installeurs produits par la construction automatique de ce dépôt
+  (`.github/workflows/windows-linux.yml`) sont signés, à partir du code source publié ici.
+- Chaque version est approuvée manuellement avant signature.
+- Committers and reviewers: [Falilou Diouf (@Faliloudiouf)](https://github.com/Faliloudiouf)
+- Approvers: [Falilou Diouf (@Faliloudiouf)](https://github.com/Faliloudiouf)
+
+### Privacy policy
+
+This program will not transfer any information to other networked systems unless specifically
+requested by the user or the person installing or operating it.
+
+Cardinal fonctionne entièrement hors ligne : les modèles restent sur l'ordinateur de
+l'utilisateur et ne sont envoyés nulle part.
+
+## Licence
+
+Cardinal est un logiciel libre distribué sous licence [MIT](LICENSE).
